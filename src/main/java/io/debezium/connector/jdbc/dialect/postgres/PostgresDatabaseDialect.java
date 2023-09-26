@@ -5,6 +5,7 @@
  */
 package io.debezium.connector.jdbc.dialect.postgres;
 
+import java.nio.ByteBuffer;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
@@ -26,6 +27,7 @@ import io.debezium.connector.jdbc.relational.ColumnDescriptor;
 import io.debezium.connector.jdbc.relational.TableDescriptor;
 import io.debezium.connector.jdbc.relational.TableId;
 import io.debezium.connector.jdbc.type.Type;
+import org.hibernate.query.NativeQuery;
 
 /**
  * A {@link DatabaseDialect} implementation for PostgreSQL.
@@ -176,5 +178,12 @@ public class PostgresDatabaseDialect extends GeneralDatabaseDialect {
         // Setting to Integer.MAX_VALUE forces PostgreSQL to use TEXT data types in primary keys
         // when no explicit size on the column is specified.
         return Integer.MAX_VALUE;
+    }
+
+    public int bindValue(SinkRecordDescriptor.FieldDescriptor field, NativeQuery<?> query, int startIndex, Object value) {
+        if (value instanceof ByteBuffer) {
+            value = ((ByteBuffer) value).array();
+        }
+        return super.bindValue(field, query, startIndex, value);
     }
 }
