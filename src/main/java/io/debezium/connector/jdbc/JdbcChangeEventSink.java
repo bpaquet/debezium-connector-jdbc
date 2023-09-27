@@ -326,7 +326,7 @@ public class JdbcChangeEventSink implements ChangeEventSink {
     private int bindFieldValuesToQuery(SinkRecordDescriptor record, NativeQuery<?> query, int index, Struct source, List<String> fields) {
         for (String fieldName : fields) {
             final FieldDescriptor field = record.getFields().get(fieldName);
-            index += dialect.bindValue(field, query, index, source.get(fieldName));
+            index += dialect.bindValue(field, query, index, source.getWithoutDefault(fieldName));
         }
         return index;
     }
