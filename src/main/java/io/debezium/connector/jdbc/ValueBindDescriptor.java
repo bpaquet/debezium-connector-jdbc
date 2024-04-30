@@ -5,6 +5,10 @@
  */
 package io.debezium.connector.jdbc;
 
+import java.sql.Array;
+import java.sql.Connection;
+import java.sql.SQLException;
+
 public class ValueBindDescriptor {
 
     private final int index;
@@ -30,6 +34,10 @@ public class ValueBindDescriptor {
 
     public Object getValue() {
         return value;
+    }
+
+    public Array getArray(Connection connection) throws SQLException {
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     public Integer getTargetSqlType() {

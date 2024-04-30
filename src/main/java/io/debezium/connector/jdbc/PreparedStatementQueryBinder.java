@@ -7,6 +7,7 @@ package io.debezium.connector.jdbc;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 
 public class PreparedStatementQueryBinder implements QueryBinder {
 
@@ -21,7 +22,12 @@ public class PreparedStatementQueryBinder implements QueryBinder {
 
         try {
             if (valueBindDescriptor.getTargetSqlType() != null) {
-                binder.setObject(valueBindDescriptor.getIndex(), valueBindDescriptor.getValue(), valueBindDescriptor.getTargetSqlType());
+                if (valueBindDescriptor.getTargetSqlType() == Types.ARRAY) {
+                    binder.setArray(valueBindDescriptor.getIndex(), valueBindDescriptor.getArray(binder.getConnection()));
+                }
+                else {
+                    binder.setObject(valueBindDescriptor.getIndex(), valueBindDescriptor.getValue(), valueBindDescriptor.getTargetSqlType());
+                }
             }
             else {
                 binder.setObject(valueBindDescriptor.getIndex(), valueBindDescriptor.getValue());
