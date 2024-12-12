@@ -172,6 +172,12 @@ public class PostgresDatabaseDialect extends GeneralDatabaseDialect {
                 return "cast(? as jsonb)";
             }
         }
+        if (schema.type() == Schema.Type.BYTES) {
+            final String typeName = column.getTypeName().toLowerCase();
+            if ("bytea".equals(typeName)) {
+                return "cast(? as bytea)";
+            }
+        }
         return super.getQueryBindingWithValueCast(column, schema, type);
     }
 
