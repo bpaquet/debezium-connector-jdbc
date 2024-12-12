@@ -161,6 +161,15 @@ public class SinkRecordDescriptor {
         }
     }
 
+    public Struct getBeforeStruct() {
+        if (isDebeziumSinkRecord()) {
+            return ((Struct) record.value()).getStruct(Envelope.FieldName.BEFORE);
+        }
+        else {
+            return ((Struct) record.value());
+        }
+    }
+
     public static Builder builder() {
         return new Builder();
     }

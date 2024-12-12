@@ -385,6 +385,11 @@ public class GeneralDatabaseDialect implements DatabaseDialect {
     }
 
     @Override
+    public String getMergeIntoStatement(TableDescriptor table, SinkRecordDescriptor record) {
+        throw new UnsupportedOperationException("Merge into is not supported for this dialect");
+    }
+
+    @Override
     public String getDeleteStatement(TableDescriptor table, SinkRecordDescriptor record) {
         final SqlStatementBuilder builder = new SqlStatementBuilder();
         builder.append("DELETE FROM ");

@@ -118,7 +118,25 @@ public class RecordWriter {
                 index = bindNonKeyValuesToQuery(sinkRecordDescriptor, queryBinder, 1);
                 bindKeyValuesToQuery(sinkRecordDescriptor, queryBinder, index);
                 break;
+            case MERGE_INTO:
+                index = bindKeyFromBeforeValuesToQuery(sinkRecordDescriptor, queryBinder, 1);
+                index = bindKeyValuesToQuery(sinkRecordDescriptor, queryBinder, index);
+                bindNonKeyValuesToQuery(sinkRecordDescriptor, queryBinder, index);
+                break;
         }
+    }
+
+    private int bindKeyFromBeforeValuesToQuery(SinkRecordDescriptor sinkRecordDescriptor, QueryBinder queryBinder, int i) {
+        for (String fieldName : sinkRecordDescriptor.getKeyFieldNames()) {
+            Struct source = sinkRecordDescriptor.getBeforeStruct();
+            if (source == null) {
+                source = sinkRecordDescriptor.getAfterStruct();
+            }
+            List<ValueBindDescriptor> boundValues = dialect.bindValue(sinkRecordDescriptor.getFields().get(fieldName), i, source.get(fieldName));
+            boundValues.forEach(queryBinder::bind);
+            i += boundValues.size();
+        }
+        return i;
     }
 
     private int bindKeyValuesToQuery(SinkRecordDescriptor record, QueryBinder query, int index) {

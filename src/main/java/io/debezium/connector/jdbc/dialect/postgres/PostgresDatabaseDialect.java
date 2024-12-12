@@ -10,6 +10,8 @@ import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.kafka.connect.data.Schema;
 import org.hibernate.SessionFactory;
@@ -115,6 +117,45 @@ public class PostgresDatabaseDialect extends GeneralDatabaseDialect {
             });
         }
         return builder.build();
+    }
+
+    public String getMergeIntoStatement(TableDescriptor table, SinkRecordDescriptor record) {
+        final SqlStatementBuilder builder = new SqlStatementBuilder();
+        builder.append("MERGE INTO ");
+        builder.append(getQualifiedTableName(table.getId()));
+        builder.append(" target USING ( VALUES (");
+        builder.appendLists(",", Stream.concat(record.getKeyFieldNames().stream(), record.getKeyFieldNames().stream()).collect(Collectors.toList()),
+                record.getNonKeyFieldNames(), (name) -> columnQueryBindingFromField(name, table, record));
+        builder.append(") ) as source ( ");
+        builder.appendList(", ", record.getKeyFieldNames(), (name) -> columnNameFromField(name, "before_", record));
+        builder.append(", ");
+        builder.appendList(", ", record.getKeyFieldNames(), (name) -> columnNameFromField(name, "after_", record));
+        if (!record.getNonKeyFieldNames().isEmpty()) {
+            builder.append(", ");
+            builder.appendList(", ", record.getNonKeyFieldNames(), (name) -> columnNameFromField(name, record));
+        }
+        builder.append(") ON ");
+        builder.appendList(" AND ", record.getKeyFieldNames(),
+                (name) -> columnNameFromField(name, "source.before_", record) + " = " + columnNameFromField(name, "target.", record));
+        builder.append(" WHEN MATCHED THEN UPDATE SET ");
+        builder.appendList(", ", record.getKeyFieldNames(),
+                (name) -> columnNameFromField(name, record) + " = " + columnNameFromField(name, "source.after_", record));
+        if (!record.getNonKeyFieldNames().isEmpty()) {
+            builder.append(", ");
+            builder.appendList(", ", record.getNonKeyFieldNames(),
+                    (name) -> columnNameFromField(name, record) + " = " + columnNameFromField(name, "source.", record));
+        }
+        builder.append(" WHEN NOT MATCHED THEN INSERT (");
+        builder.appendLists(", ", record.getKeyFieldNames(), record.getNonKeyFieldNames(), (name) -> columnNameFromField(name, record));
+        builder.append(") VALUES (");
+        builder.appendList(", ", record.getKeyFieldNames(), (name) -> columnNameFromField(name, "source.before_", record));
+        if (!record.getNonKeyFieldNames().isEmpty()) {
+            builder.append(", ");
+            builder.appendList(", ", record.getNonKeyFieldNames(), (name) -> columnNameFromField(name, record));
+        }
+        builder.append(")");
+        return builder.build();
+
     }
 
     @Override
