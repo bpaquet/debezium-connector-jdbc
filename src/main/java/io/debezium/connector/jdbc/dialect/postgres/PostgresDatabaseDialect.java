@@ -148,7 +148,7 @@ public class PostgresDatabaseDialect extends GeneralDatabaseDialect {
         builder.append(" WHEN NOT MATCHED THEN INSERT (");
         builder.appendLists(", ", record.getKeyFieldNames(), record.getNonKeyFieldNames(), (name) -> columnNameFromField(name, record));
         builder.append(") VALUES (");
-        builder.appendList(", ", record.getKeyFieldNames(), (name) -> columnNameFromField(name, "source.before_", record));
+        builder.appendList(", ", record.getKeyFieldNames(), (name) -> columnNameFromField(name, "source.after_", record));
         if (!record.getNonKeyFieldNames().isEmpty()) {
             builder.append(", ");
             builder.appendList(", ", record.getNonKeyFieldNames(), (name) -> columnNameFromField(name, record));
