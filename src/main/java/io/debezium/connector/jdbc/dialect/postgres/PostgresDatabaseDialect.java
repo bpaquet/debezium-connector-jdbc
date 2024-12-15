@@ -134,10 +134,13 @@ public class PostgresDatabaseDialect extends GeneralDatabaseDialect {
             builder.append(", ");
             builder.appendList(", ", record.getNonKeyFieldNames(), (name) -> columnNameFromField(name, record));
         }
-        builder.append(") ON ");
+        builder.append(") ON ((");
         builder.appendList(" AND ", record.getKeyFieldNames(),
                 (name) -> columnNameFromField(name, "source.before_", record) + " = " + columnNameFromField(name, "target.", record));
-        builder.append(" WHEN MATCHED THEN UPDATE SET ");
+        builder.append(") OR (");
+        builder.appendList(" AND ", record.getKeyFieldNames(),
+                (name) -> columnNameFromField(name, "source.after_", record) + " = " + columnNameFromField(name, "target.", record));
+        builder.append(")) WHEN MATCHED THEN UPDATE SET ");
         builder.appendList(", ", record.getKeyFieldNames(),
                 (name) -> columnNameFromField(name, record) + " = " + columnNameFromField(name, "source.after_", record));
         if (!record.getNonKeyFieldNames().isEmpty()) {
