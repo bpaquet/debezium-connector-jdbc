@@ -24,15 +24,17 @@ import io.debezium.connector.jdbc.junit.TestHelper;
  */
 public class PostgresSinkDatabaseContextProvider extends AbstractSinkDatabaseContextProvider implements BeforeEachCallback, AfterEachCallback {
 
-    // We explicitly use debezium/postgres which has the POSTGIS extension available.
-    // The standard postgres image does not ship with POSTGIS available by default.
-    private static final DockerImageName IMAGE_NAME = DockerImageName.parse("debezium/postgres:15-alpine")
-            .asCompatibleSubstituteFor("postgres");
+    public PostgresSinkDatabaseContextProvider() {
+        // We explicitly use debezium/postgres which has the POSTGIS extension available.
+        // The standard postgres image does not ship with POSTGIS available by default.
+        this(DockerImageName.parse("debezium/postgres")
+                .asCompatibleSubstituteFor("postgres"));
+    }
 
     @SuppressWarnings("resource")
-    public PostgresSinkDatabaseContextProvider() {
+    public PostgresSinkDatabaseContextProvider(DockerImageName image) {
         super(SinkType.POSTGRES,
-                new PostgreSQLContainer<>(IMAGE_NAME)
+                new PostgreSQLContainer<>(image)
                         .withNetwork(Network.newNetwork())
                         .withDatabaseName("test")
                         .withEnv("TZ", TestHelper.getSinkTimeZone())

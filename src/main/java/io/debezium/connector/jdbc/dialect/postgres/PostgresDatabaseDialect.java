@@ -129,7 +129,7 @@ public class PostgresDatabaseDialect extends GeneralDatabaseDialect {
         builder.append(") ) as source ( ");
         builder.appendList(", ", record.getKeyFieldNames(), (name) -> columnNameFromField(name, "before_", record));
         builder.append(", ");
-        builder.appendList(", ", record.getKeyFieldNames(), (name) -> columnNameFromField(name, "after_", record));
+        builder.appendList(", ", record.getKeyFieldNames(), (name) -> columnNameFromField(name, record));
         if (!record.getNonKeyFieldNames().isEmpty()) {
             builder.append(", ");
             builder.appendList(", ", record.getNonKeyFieldNames(), (name) -> columnNameFromField(name, record));
@@ -139,10 +139,10 @@ public class PostgresDatabaseDialect extends GeneralDatabaseDialect {
                 (name) -> columnNameFromField(name, "source.before_", record) + " = " + columnNameFromField(name, "target.", record));
         builder.append(") OR (");
         builder.appendList(" AND ", record.getKeyFieldNames(),
-                (name) -> columnNameFromField(name, "source.after_", record) + " = " + columnNameFromField(name, "target.", record));
+                (name) -> columnNameFromField(name, "source.", record) + " = " + columnNameFromField(name, "target.", record));
         builder.append(")) WHEN MATCHED THEN UPDATE SET ");
         builder.appendList(", ", record.getKeyFieldNames(),
-                (name) -> columnNameFromField(name, record) + " = " + columnNameFromField(name, "source.after_", record));
+                (name) -> columnNameFromField(name, record) + " = " + columnNameFromField(name, "source.", record));
         if (!record.getNonKeyFieldNames().isEmpty()) {
             builder.append(", ");
             builder.appendList(", ", record.getNonKeyFieldNames(),
@@ -151,7 +151,7 @@ public class PostgresDatabaseDialect extends GeneralDatabaseDialect {
         builder.append(" WHEN NOT MATCHED THEN INSERT (");
         builder.appendLists(", ", record.getKeyFieldNames(), record.getNonKeyFieldNames(), (name) -> columnNameFromField(name, record));
         builder.append(") VALUES (");
-        builder.appendList(", ", record.getKeyFieldNames(), (name) -> columnNameFromField(name, "source.after_", record));
+        builder.appendList(", ", record.getKeyFieldNames(), (name) -> columnNameFromField(name, "source.", record));
         if (!record.getNonKeyFieldNames().isEmpty()) {
             builder.append(", ");
             builder.appendList(", ", record.getNonKeyFieldNames(), (name) -> columnNameFromField(name, "source.", record));

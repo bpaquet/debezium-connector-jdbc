@@ -325,10 +325,10 @@ public interface SinkRecordFactory {
     }
 
     default SinkRecord updateRecord(String topicName) {
-        return updateRecord(topicName, (byte) 1, (byte) 1);
+        return updateRecord(topicName, (byte) 1, (byte) 1, "Jane Doe");
     }
 
-    default SinkRecord updateRecord(String topicName, byte keyBefore, byte keyAfter) {
+    default SinkRecord updateRecord(String topicName, byte keyBefore, byte keyAfter, String nameAfter) {
         return SinkRecordBuilder.update()
                 .flat(isFlattened())
                 .name("prefix")
@@ -340,7 +340,7 @@ public interface SinkRecordFactory {
                 .before("id", keyBefore)
                 .before("name", "John Doe")
                 .after("id", keyAfter)
-                .after("name", "Jane Doe")
+                .after("name", nameAfter)
                 .after("nick_name_", "John Doe$")
                 .source("ts_ms", (int) Instant.now().getEpochSecond())
                 .build();
