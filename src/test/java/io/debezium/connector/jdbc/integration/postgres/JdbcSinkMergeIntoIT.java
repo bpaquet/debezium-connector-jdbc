@@ -133,4 +133,40 @@ public class JdbcSinkMergeIntoIT extends AbstractJdbcSinkTest {
         tableAssert.row(0).value("name").isEqualTo("Jane Doe");
     }
 
+    @Test
+    public void testInsertModeMergeIntoPkMoveAndReplay() throws Exception {
+        SinkRecordFactory factory = new DebeziumSinkRecordFactory();
+        final Map<String, String> properties = getDefaultSinkConfig();
+        properties.put(JdbcSinkConnectorConfig.SCHEMA_EVOLUTION, SchemaEvolutionMode.BASIC.getValue());
+        properties.put(JdbcSinkConnectorConfig.PRIMARY_KEY_MODE, PrimaryKeyMode.RECORD_KEY.getValue());
+        properties.put(JdbcSinkConnectorConfig.INSERT_MODE, InsertMode.MERGE_INTO.getValue());
+
+        startSinkConnector(properties);
+        assertSinkConnectorIsRunning();
+
+        final String tableName = randomTableName();
+        final String topicName = topicName("server1", "public", tableName);
+
+        final SinkRecord createSimpleRecord1 = factory.createRecord(topicName, (byte) 1, String::toUpperCase);
+        final SinkRecord createSimpleRecord2 = factory.updateRecord(topicName, (byte) 1, (byte) 2, "Jane Doe");
+        consume(createSimpleRecord1);
+        consume(createSimpleRecord2);
+
+        DataSourceWithLetterCase dataSourceWithLetterCase = new DataSourceWithLetterCase(dataSource(), LetterCase.TABLE_DEFAULT, LOWER_CASE_STRICT, LOWER_CASE_STRICT);
+
+         TableAssert tableAssert = TestHelper.assertTable(dataSourceWithLetterCase, destinationTableName(createSimpleRecord1), null, null);
+        tableAssert.exists().hasNumberOfRows(1);
+
+        tableAssert.row(0).value("id").isEqualTo(2);
+        tableAssert.row(0).value("name").isEqualTo("Jane Doe");
+
+        consume(createSimpleRecord1);
+        consume(createSimpleRecord2);
+
+        tableAssert = TestHelper.assertTable(dataSourceWithLetterCase, destinationTableName(createSimpleRecord1), null, null);
+        tableAssert.exists().hasNumberOfRows(1);
+        tableAssert.row(0).value("id").isEqualTo(2);
+        tableAssert.row(0).value("name").isEqualTo("Jane Doe");
+    }
+
 }
